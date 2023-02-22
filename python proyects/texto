@@ -1,0 +1,108 @@
+import json
+
+
+
+# archivo = open('txtprueba','w')
+# cadena = input("Ingresa la cadena: ")
+# archivo.write(cadena)
+# archivo.close()
+# archivo = open('txtprueba.txt')
+
+
+# nombre = input("Nombre: ")
+# correo = input("Correo: ")
+# contraseña = input("Contraseña: ")
+
+# usuariojson = {
+#     "nombre": nombre,
+#     "correo": correo,
+#     "contraseña": contraseña
+# }
+
+
+# with open('user','w') as archivojson:
+#     json.dump(usuariojson,archivojson)
+    
+
+
+
+
+# def makeTextFile(text,nameFile):
+#      file = open(nameFile)
+#      file.write(text)
+#      file.close()
+#      file = open(nameFile)
+    
+def getJson(fileName):
+    try:
+        with open(fileName,'r') as file:
+            jsonData = json.load(file)
+        return jsonData
+    except:
+        print("El json no es válido")
+
+
+def UserRegister(fileName):
+    try:
+    #obtener los datos del json
+        jsonData = getJson(fileName)
+        for index, object in enumerate(jsonData):
+           print(f"{index}. {object}")
+        condition=True
+        users = []
+        while condition:
+         name = input("Enter name: ")
+         if (name==""):
+             condition=False 
+             break
+         password = input("Enter password: ") 
+         mail = input("Enter mail: ")
+         user = {"Username: ": name, "Password: ": password, "mail: ": mail}
+         users.append(user)
+         with open(fileName,"w") as file:
+            json.dump(users,file)
+        
+    except: 
+        print("Algo ha ido mal")
+        
+        
+def ReadFile(fileName):
+ with open(fileName,'r') as file:
+   users = json.load(file)
+   
+   for i, user in enumerate(users):
+       print(f"{i}. {user}")
+     
+
+def undefinedFunction():
+    print("Undefined function")
+    
+
+fileName= input("Give me some file name: ")    
+UserRegister(fileName)
+
+# fileName2= input("What file do you want to read? ")
+# ReadFile(fileName2)
+
+
+
+# switch = {
+#     1: UserRegister(fileName),
+    
+#    # 2: ReadFile(fileName2)
+# }
+# x = int(input("¿Qué deseas hacer?: "))
+# switch.get(x, undefinedFunction)()
+
+
+
+
+
+
+# # Abrir el archivo en modo de lectura
+# with open(fileName2, 'r') as archivo:
+#     # Cargar el contenido del archivo en un diccionario de Python
+#     datos = json.load(archivo)
+
+# # Imprimir el diccionario
+# print(datos)
