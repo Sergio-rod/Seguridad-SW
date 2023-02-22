@@ -49,7 +49,6 @@ def UserRegister(fileName):
         for index, object in enumerate(jsonData):
            print(f"{index}. {object}")
         condition=True
-        users = []
         while condition:
          name = input("Enter name: ")
          if (name==""):
@@ -57,10 +56,12 @@ def UserRegister(fileName):
              break
          password = input("Enter password: ") 
          mail = input("Enter mail: ")
+         
+         
          user = {"Username: ": name, "Password: ": password, "mail: ": mail}
-         users.append(user)
+         jsonData.append(user)
          with open(fileName,"w") as file:
-            json.dump(users,file)
+            json.dump(jsonData,file)
         
     except: 
         print("Algo ha ido mal")
