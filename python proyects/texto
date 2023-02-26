@@ -113,6 +113,24 @@ def ServiceRegister(userName,userPassword,fileName):
             else: jumpFirst = True
         return False
     printJson(jsonData)
+    
+    
+def ShowServices(fileName,userName):
+    jsonData = getJson(fileName)
+    jumpFirst = False
+    for i in jsonData:
+        if jumpFirst:
+            if i["Username: "]==userName:
+                  services = i["services: "]
+                  jumpService= False
+                  for service in services:
+                      if jumpService:
+                       print(f"- {service['Service Name: ']}")
+                      else: jumpService = True
+        else: jumpFirst= True
+            
+        
+    
 
 
 def loginUser(name, password, fileName):
@@ -187,7 +205,7 @@ def subMenu(userName,userPassword,fileName):
         if y==1:
             ServiceRegister(userName, userPassword, fileName)
         elif y==2:
-            print("Hello")
+            ShowServices(fileName,userName)
         elif y==3:
             print("Adios")
             condition=False
