@@ -65,7 +65,7 @@ def UserRegister(fileName):
                 mailBanner = existMail(mail, fileName)
                 if mailBanner:
                     user = {"Username: ": name,
-                            "Password: ": password, "mail: ": mail}
+                            "Password: ": password, "mail: ": mail, "services: ": [{}]}
                     jsonData.append(user)
                     with open(fileName, "w") as file:
                         json.dump(jsonData, file)
@@ -79,7 +79,7 @@ def UserRegister(fileName):
                 password = input("Enter password: ")
                 mail = input("Enter mail: ")
                 user = {"Username: ": name,
-                        "Password: ": password, "mail: ": mail}
+                        "Password: ": password, "mail: ": mail, "services: ": [{}]}
                 jsonData.append(user)
                 with open(fileName, "w") as file:
                     json.dump(jsonData, file)
@@ -87,6 +87,32 @@ def UserRegister(fileName):
         printJson(jsonData)
     except:
         print("Algo ha ido mal")
+        
+        
+
+def ServiceRegister(userName,userPassword,fileName):
+ 
+    jsonData = getJson(fileName)
+    condition = True
+    jumpFirst = False
+    while condition:
+        for i in jsonData:
+            if jumpFirst:
+                if (i["Username: "]==userName):
+                    name = input("Enter service name: ")
+                    if(name==""):
+                        condition= False
+                        break
+                    password=userPassword
+                    user=userName
+                    i["services: "].append({"Service Name: ":name, 
+                                           "Service password: ":password,"User: ": user})
+                    with open(fileName, "w") as file:
+                        json.dump(jsonData,file)
+                    return True
+            else: jumpFirst = True
+        return False
+    printJson(jsonData)
 
 
 def loginUser(name, password, fileName):
@@ -97,11 +123,9 @@ def loginUser(name, password, fileName):
         if jumpFirst:
             if (i["Username: "] == name) and (i["Password: "] == password):
                 loginStatus = True
-                print("Bienvenido")
                 break
         else:jumpFirst=True    
-    if not loginStatus:
-        print("No se encontraron registros")
+    return loginStatus
 
     # return loginStatus
 
@@ -149,6 +173,28 @@ def modifyUserField(fileName, name, field):
     except:
         print("An error occurred")
         return False
+    
+    
+    
+    
+def subMenu(userName,userPassword,fileName):
+    condition = True
+    while condition:
+        print(f"-----------Bienvenid@-{name}----------")
+        print("1) Agregar servicios", "2) Ver servicios", "3) Salir")
+        y = int(input("Ingrese la opción deseada (1,2,3)"))
+        
+        if y==1:
+            ServiceRegister(userName, userPassword, fileName)
+        elif y==2:
+            print("Hello")
+        elif y==3:
+            print("Adios")
+            condition=False
+            exit()
+        else: print("Ingresa una opción valida")
+        
+            
 
 
 print("------------Opciones-------------")
@@ -165,7 +211,9 @@ while condition:
         name = input("Ingresa el nombre de usuario: ")
         password = input("Ingresa la contraseña: ")
 
-        loginUser(name, password, fileName)
+        banner = loginUser(name, password, fileName)
+        if banner: subMenu(name, password, fileName)
+        else: print("Incorrecto")
     elif x == 3:
         condition = False
         (lambda: (print("Adios"), exit()))
