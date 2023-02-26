@@ -18,27 +18,35 @@ def printJson(jsonData):
 
 def existMail(mail, fileName):
     jsonData = getJson(fileName)
-    jumpFirst =False
-    if(len(jsonData))==1:
+    jumpFirst = False
+    if (len(jsonData)) == 1:
         return True
     else:
         for i in jsonData:
             if jumpFirst:
-                if i["mail: "]==mail:
-                 print("Este mail ya existe")
-                 return False
+                if i["mail: "] == mail:
+                    print("Este mail ya existe")
+                    return False
             else:
-                jumpFirst= True
+                jumpFirst = True
     return True
-def filelExists(fileName):
-    return os.path.isfile(fileName)
+
+
+def fileExists(fileName):
+    try:
+        return os.path.isfile(fileName)
+    except:
+        return False
 
 
 def UserRegister(fileName):
-    if not filelExists(fileName):
+
+    if not fileExists(fileName):
         with open(fileName, 'w') as fileName:
-            UserRegister(fileName)
-        
+            fileName.write("[{}]")
+            print("Se ha creado el archivo")
+            exit()
+
     try:
         # obtener los datos del json
         jsonData = getJson(fileName)
@@ -84,11 +92,14 @@ def UserRegister(fileName):
 def loginUser(name, password, fileName):
     loginStatus = False
     jsonData = getJson(fileName)
+    jumpFirst = False
     for i in jsonData:
-        if (i["Username: "] == name) and (i["Password: "] == password):
-            loginStatus = True
-            print("Bienvenido")
-            break
+        if jumpFirst:
+            if (i["Username: "] == name) and (i["Password: "] == password):
+                loginStatus = True
+                print("Bienvenido")
+                break
+        else:jumpFirst=True    
     if not loginStatus:
         print("No se encontraron registros")
 
