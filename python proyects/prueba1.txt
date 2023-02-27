@@ -1,1 +1,1 @@
-[{}, {"Username: ": "Sergio", "Password: ": "1234", "mail: ": "mail", "services: ": [{}, {"Service Name: ": "lavado 2", "Service password: ": "1234", "User: ": "Sergio"}, {"Service Name: ": "123", "Service password: ": "1234", "User: ": "Sergio"}]}]
+[{"Username: ": "Sergio", "Password: ": "1234", "mail: ": "MAIL", "services: ": [{}]}, {"Username: ": "Checo", "Password: ": "perez", "mail: ": "asdasdas", "services: ": [{}]}]

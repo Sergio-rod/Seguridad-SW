@@ -16,21 +16,16 @@ def printJson(jsonData):
         print(f"{index}. {object}")
 
 
-def existMail(mail, fileName):
-    jsonData = getJson(fileName)
-    jumpFirst = False
-    if (len(jsonData)) == 1:
+def existMail(mail, jsonData):
+    if len(jsonData)==0:
         return True
-    else:
-        for i in jsonData:
-            if jumpFirst:
-                if i["mail: "] == mail:
-                    print("Este mail ya existe")
-                    return False
-            else:
-                jumpFirst = True
+    else:    
+        for i in jsonData:  
+            if i["mail: "] == mail:
+             print("Este mail ya existe")
+             return False
     return True
-
+   
 
 def fileExists(fileName):
     try:
@@ -40,17 +35,20 @@ def fileExists(fileName):
 
 
 def AddUser(fileName):
-
     if not fileExists(fileName):
         with open(fileName, 'w') as fileName:
             fileName.write("[{}]")
             print("Se ha creado el archivo")
             exit()
-
     try:
         # obtener los datos del json
         jsonData = getJson(fileName)
         printJson(jsonData)
+        
+        if not jsonData[0]:
+            jsonData.pop(0)
+        printJson(jsonData)
+        
         condition = True
         while condition:
             if (len(jsonData) > 0):
@@ -62,7 +60,7 @@ def AddUser(fileName):
                 mail = input("Enter mail: ")
 
                 # verifica mail
-                mailBanner = existMail(mail, fileName)
+                mailBanner = existMail(mail, jsonData)
                 if mailBanner:
                     user = {"Username: ": name,
                             "Password: ": password, "mail: ": mail, "services: ": [{}]}
@@ -81,6 +79,7 @@ def AddUser(fileName):
                 user = {"Username: ": name,
                         "Password: ": password, "mail: ": mail, "services: ": [{}]}
                 jsonData.append(user)
+                
                 with open(fileName, "w") as file:
                     json.dump(jsonData, file)
 
