@@ -39,7 +39,7 @@ def fileExists(fileName):
         return False
 
 
-def UserRegister(fileName):
+def AddUser(fileName):
 
     if not fileExists(fileName):
         with open(fileName, 'w') as fileName:
@@ -90,7 +90,7 @@ def UserRegister(fileName):
         
         
 
-def ServiceRegister(userName,userPassword,fileName):
+def AddService(userName,userPassword,fileName):
  
     jsonData = getJson(fileName)
     condition = True
@@ -203,7 +203,7 @@ def subMenu(userName,userPassword,fileName):
         y = int(input("Ingrese la opción deseada (1,2,3)"))
         
         if y==1:
-            ServiceRegister(userName, userPassword, fileName)
+            AddService(userName, userPassword, fileName)
         elif y==2:
             ShowServices(fileName,userName)
         elif y==3:
@@ -215,16 +215,19 @@ def subMenu(userName,userPassword,fileName):
             
 
 
-print("------------Opciones-------------")
-print("1) Registrar Usuario ", "2) Iniciar sesión ", "3) Salir ")
-fileName = "prueba1.txt"
+
 condition = True
 
 while condition:
+    
+    print("------------Opciones-------------")
+    print("1) Registrar Usuario ", "2) Iniciar sesión ", "3) Salir ")
+    fileName = "prueba1.txt"
+    
     x = int(input("Ingresa lo que desees hacer (1,2,3)"))
 
     if x == 1:
-        UserRegister(fileName)
+        AddUser(fileName)
     elif x == 2:
         name = input("Ingresa el nombre de usuario: ")
         password = input("Ingresa la contraseña: ")
