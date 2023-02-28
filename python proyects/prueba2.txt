@@ -1,0 +1,1 @@
+[{"Username": "Sergio", "Password": "1234", "Email": "mail", "Servicios": [{"Service name": "lavado plus", "Password": "3212", "Creator": "Sergio"}, {"Service name": "lavado", "Password": "1234", "Creator": "Sergio"}, {"Service name": "asd", "Password": "1234", "Creator": "Sergio"}]}]

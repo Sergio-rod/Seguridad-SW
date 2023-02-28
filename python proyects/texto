@@ -16,8 +16,9 @@ def printJson(jsonData):
         print(f"{index}. {object}")
 
 
-def existMail(mail, jsonData):
-    if len(jsonData)==0:
+def existMail(mail, fileName):
+    jsonData = getJson(fileName)
+    if len(jsonData)==1:
         return True
     else:    
         for i in jsonData:  
@@ -60,7 +61,7 @@ def AddUser(fileName):
                 mail = input("Enter mail: ")
 
                 # verifica mail
-                mailBanner = existMail(mail, jsonData)
+                mailBanner = existMail(mail, fileName)
                 if mailBanner:
                     user = {"Username: ": name,
                             "Password: ": password, "mail: ": mail, "services: ": [{}]}
