@@ -3,6 +3,9 @@ import json
 import hashlib
 import unicodedata
 from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+import traceback
+import base64
 
 
 #---------------------------------USUARIOS---------------------------------------
@@ -71,34 +74,65 @@ def FuncSha512(password):
 #---------------------------------SERVICIOS---------------------------------------
 
 #ADICIÓN DE SERVICIO
-def AddService(userName,password,fileName):
-    jsonData = getJson(fileName)
+# def AddService(userName,userPassword,fileName):
+#     jsonData = getJson(fileName)
+#     condition = True
+#     while condition:
+#         user = getUserData(userName,jsonData)
+#         name = input("Ingresa el nombre del servicio: ")
+#         if (name==""):
+#             condition = False
+#             break
+#         password = input("Ingrese la contraseña: ")
+#         createdBy = userName
+#         service= asignService(name,password,createdBy,userPassword)
+#         user["Servicios"].append(service)
+#         print(service)
+#         try: 
+#             with open(fileName,"w") as file:
+#                 file.write(jsonData)
+#                 #json.dump(jsonData,file)
+#                 print("Se ha agregado el servicio con éxito")
+#         except Exception as e: 
+#             traceback.print_exc()
+#             print("Ocurrió un error", e)
+#             break
+def AddService(userName, userPassword, fileName):
+    # Leer el contenido del archivo JSON y cargarlo en una variable como un diccionario de Python
+    with open(fileName) as file:
+        jsonData = json.load(file)
+
     condition = True
     while condition:
-        user = getUserData(userName,jsonData)
+        user = getUserData(userName, jsonData)
         name = input("Ingresa el nombre del servicio: ")
-        if (name==""):
+        if name == "":
             condition = False
             break
         password = input("Ingrese la contraseña: ")
         createdBy = userName
-        service = {"Service name": name,"Password":password,"Creator":createdBy}
-        user["Servicios"].append(service)
+        service = asignService(name, password, createdBy, userPassword)
         
-        try: 
-            with open(fileName,"w") as file:
-                json.dump(jsonData,file)
-                print("Se ha agregado el servicio con éxito")
-        except: 
-            print("Ocurrió un error")
+        # Agregar el objeto JSON de servicio al arreglo "Servicios" del diccionario de usuario
+        user["Servicios"].append(json.loads(service))
+        
+        # Escribir el diccionario actualizado en el archivo
+        try:
+            with open(fileName, "w") as file:
+                json.dump(jsonData, file, ensure_ascii=False)
+            print("Se ha agregado el servicio con éxito")
+        except Exception as e:
+            traceback.print_exc()
+            print("Ocurrió un error", e)
             break
+
 
 def ShowService(userName,fileName):
     jsonData = getJson(fileName)
     user = getUserData(userName,jsonData)
     services = user["Servicios"]  
     for service in services:
-          print(f"- Nombre de servicio: {service['Service name']} Contraseña:  {service['Password']} Creador: {service['Creator']}")  
+          print(service['Service name'])  
           
 def DeleteService(userName, serviceName,fileName):
     jsonData = getJson(fileName)
@@ -129,6 +163,45 @@ def ServiceUpdated(name,password):
 
         
 #EXTRAS-----------------------------------------------------------------------------
+def asignService(name,password,createdBy,userPassword):
+    
+     ServiceName= encrypt(name,userPassword)
+     ServicePassword= encrypt(password,userPassword)
+     ServiceCreatedBy= encrypt(createdBy,userPassword)
+    
+     nameCoded = base64.b64encode(ServiceName).decode('utf-8')
+     passwordCoded = base64.b64encode(ServicePassword).decode('utf-8')
+     createdByCoded = base64.b64encode(ServiceCreatedBy).decode('utf-8')
+
+
+     service = {"Service name":nameCoded,"Password":passwordCoded,"Creator":createdByCoded}
+    
+     print(" ")
+     print("El servicio es: ")
+     print(service)
+     print("   ")
+     jsonData = json.dumps(service, ensure_ascii=False)
+          
+    
+     return jsonData
+
+# def asignService(name,password,createdBy,userPassword):
+
+#     service = {
+#         "Service name": name,
+#         "Password": password,
+#         "Creator": createdBy
+#     }
+    
+#     for key, value in service.items():
+#         service[key] = base64.b64encode(encrypt(value.encode('utf-8'), userPassword)).decode('utf-8')
+
+#     jsonData = json.dumps(service)
+    
+#     return jsonData
+
+    
+
 def printJson(jsonData):
     for index, object in enumerate(jsonData):
         print(f"{index}. {object}")
@@ -214,6 +287,24 @@ def subMenu(userName,userPassword,fileName):
             
         else: print("Ingresa una opción valida")
         
+def encrypt(plainText,key):
+    textBytes = plainText.encode('utf-8')
+    keyBytes = key.encode('utf-8')
+    
+    iv = get_random_bytes(16)
+    paddedText = textBytes + b"\0"*(AES.block_size - len(textBytes)%AES.block_size)
+    cipher = AES.new(keyBytes, AES.MODE_CBC, iv)
+    
+    encryptedText= cipher.encrypt(paddedText)
+    return iv + encryptedText
+
+def decrypt(cipherText, key):
+    iv = cipherText[:16]
+    keyBytes = key.encode('utf-8')
+    cipher = AES.new(keyBytes, AES.MODE_CBC, iv)
+    decryptedText = cipher.decrypt(cipherText[16:])
+    return decryptedText.rstrip(b"\0").decode('utf-8')
+
 
     
     
