@@ -1,6 +1,8 @@
 import os
 import json
-
+import hashlib
+import unicodedata
+from Crypto.Cipher import AES
 
 
 #---------------------------------USUARIOS---------------------------------------
@@ -16,7 +18,7 @@ def AddUser(fileName):
                 password = input("Ingrese la contraseña: ")
                 mail= input("Ingresa un email: ")
                 try:
-                     user= {"Username": name, "Password": password, "Email":mail, "Servicios": []}
+                     user= {"Username": name, "Password": FuncSha512(password), "Email":mail, "Servicios": []}
                      with open(fileName, 'w') as file:
                         json.dump([user],file)
                         print("Se ha creado el archivo")
@@ -34,7 +36,7 @@ def AddUser(fileName):
                 mailBanner = existMail(mail, jsonData)
                 if mailBanner: 
                     try:
-                         user= {"Username": name, "Password": password, "Email":mail, "Servicios": []}
+                         user= {"Username": name, "Password": FuncSha512(password), "Email":mail, "Servicios": []}
                          jsonData.append(user)
                          
                          with open(fileName, 'w') as file:
@@ -48,11 +50,17 @@ def AddUser(fileName):
 def loginUser(name, password, fileName):
     jsonData = getJson(fileName)
     for i in jsonData:
-        if(i["Username"]==name and i["Password"]==password):
+        if(i["Username"]==name and i["Password"]==FuncSha512(password)):
             print(f"-----------Bienvenid@--{name}-------------")
             return True
     print("Usuario o contraseña incorrecto")
     return False
+
+
+def FuncSha512(password):
+    hashSha512= hashlib.sha512(password.encode('utf-8'))
+    sha512 = hashSha512.hexdigest()
+    return sha512
 #---------------------------------TERMINA-USUARIOS--------------------------------------
 
     
@@ -63,7 +71,7 @@ def loginUser(name, password, fileName):
 #---------------------------------SERVICIOS---------------------------------------
 
 #ADICIÓN DE SERVICIO
-def AddService(userName,userPassword,fileName):
+def AddService(userName,password,fileName):
     jsonData = getJson(fileName)
     condition = True
     while condition:
@@ -72,7 +80,7 @@ def AddService(userName,userPassword,fileName):
         if (name==""):
             condition = False
             break
-        password = userPassword
+        password = input("Ingrese la contraseña: ")
         createdBy = userName
         service = {"Service name": name,"Password":password,"Creator":createdBy}
         user["Servicios"].append(service)
@@ -205,7 +213,8 @@ def subMenu(userName,userPassword,fileName):
             exit()
             
         else: print("Ingresa una opción valida")
-    
+        
+
     
     
     
