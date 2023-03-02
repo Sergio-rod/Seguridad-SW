@@ -6,6 +6,9 @@ from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 import traceback
 import base64
+from Crypto.Util import Padding
+from Crypto.Util.Padding import unpad
+
 
 
 #---------------------------------USUARIOS---------------------------------------
@@ -74,33 +77,11 @@ def FuncSha512(password):
 #---------------------------------SERVICIOS---------------------------------------
 
 #ADICIÓN DE SERVICIO
-# def AddService(userName,userPassword,fileName):
-#     jsonData = getJson(fileName)
-#     condition = True
-#     while condition:
-#         user = getUserData(userName,jsonData)
-#         name = input("Ingresa el nombre del servicio: ")
-#         if (name==""):
-#             condition = False
-#             break
-#         password = input("Ingrese la contraseña: ")
-#         createdBy = userName
-#         service= asignService(name,password,createdBy,userPassword)
-#         user["Servicios"].append(service)
-#         print(service)
-#         try: 
-#             with open(fileName,"w") as file:
-#                 file.write(jsonData)
-#                 #json.dump(jsonData,file)
-#                 print("Se ha agregado el servicio con éxito")
-#         except Exception as e: 
-#             traceback.print_exc()
-#             print("Ocurrió un error", e)
-#             break
+
 def AddService(userName, userPassword, fileName):
-    # Leer el contenido del archivo JSON y cargarlo en una variable como un diccionario de Python
-    with open(fileName) as file:
-        jsonData = json.load(file)
+    # with open(fileName) as file:
+    #     jsonData = json.load(file)
+    jsonData = getJson(fileName)
 
     condition = True
     while condition:
@@ -127,12 +108,19 @@ def AddService(userName, userPassword, fileName):
             break
 
 
-def ShowService(userName,fileName):
+def ShowService(userName,userPassword,fileName):
     jsonData = getJson(fileName)
     user = getUserData(userName,jsonData)
     services = user["Servicios"]  
     for service in services:
-          print(service['Service name'])  
+        
+        
+        
+        # display =decrypt(service["Service name"],userPassword)
+        display = reverseEngineering(service["Service name"],service["Password"],service["Creator"],userPassword)
+
+        
+        print(display)  
           
 def DeleteService(userName, serviceName,fileName):
     jsonData = getJson(fileName)
@@ -164,7 +152,6 @@ def ServiceUpdated(name,password):
         
 #EXTRAS-----------------------------------------------------------------------------
 def asignService(name,password,createdBy,userPassword):
-    
      ServiceName= encrypt(name,userPassword)
      ServicePassword= encrypt(password,userPassword)
      ServiceCreatedBy= encrypt(createdBy,userPassword)
@@ -182,23 +169,28 @@ def asignService(name,password,createdBy,userPassword):
      print("   ")
      jsonData = json.dumps(service, ensure_ascii=False)
           
-    
      return jsonData
+ 
 
-# def asignService(name,password,createdBy,userPassword):
 
-#     service = {
-#         "Service name": name,
-#         "Password": password,
-#         "Creator": createdBy
-#     }
-    
-#     for key, value in service.items():
-#         service[key] = base64.b64encode(encrypt(value.encode('utf-8'), userPassword)).decode('utf-8')
+def reverseEngineering(nameCoded, passwordCoded, createdByCoded, userPassword):
+    nameBytes = base64.b64decode(nameCoded)
+    passwordBytes = base64.b64decode(passwordCoded)
+    createdByBytes = base64.b64decode(createdByCoded)
 
-#     jsonData = json.dumps(service)
-    
-#     return jsonData
+    name = decrypt(nameBytes, userPassword)
+    password = decrypt(passwordBytes, userPassword)
+    createdBy = decrypt(createdByBytes, userPassword)
+
+    service = {"Service name": name, "Password": password, "Creator": createdBy}
+
+    print(" ")
+    print("El servicio es: ")
+    print(service)
+    print("   ")
+    jsonData = json.dumps(service, ensure_ascii=False)
+    return jsonData
+
 
     
 
@@ -264,7 +256,7 @@ def subMenu(userName,userPassword,fileName):
         elif y==2:
             print("")
 
-            ShowService(userName,fileName)
+            ShowService(userName,userPassword,fileName)
             print("")
       
         elif y == 3:
@@ -300,12 +292,19 @@ def encrypt(plainText,key):
 
 def decrypt(cipherText, key):
     iv = cipherText[:16]
+    cipherBytes = cipherText[16:]
     keyBytes = key.encode('utf-8')
     cipher = AES.new(keyBytes, AES.MODE_CBC, iv)
-    decryptedText = cipher.decrypt(cipherText[16:])
+    decryptedText = cipher.decrypt(cipherBytes)
     return decryptedText.rstrip(b"\0").decode('utf-8')
 
 
+
+def getKeyBytes(keyString):
+    # Convert key string to bytes and pad with zeroes if necessary
+    keyBytes = keyString.encode('utf-8')
+    keyBytes += b'\0' * (AES.block_size - len(keyBytes) % AES.block_size)
+    return keyBytes
     
     
     

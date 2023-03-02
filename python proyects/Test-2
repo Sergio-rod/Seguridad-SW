@@ -1,0 +1,110 @@
+def asignService(name,password,createdBy,userPassword):
+     ServiceName= encrypt(name,userPassword)
+     ServicePassword= encrypt(password,userPassword)
+     ServiceCreatedBy= encrypt(createdBy,userPassword)
+    
+     nameCoded = base64.b64encode(ServiceName).decode('utf-8')
+     passwordCoded = base64.b64encode(ServicePassword).decode('utf-8')
+     createdByCoded = base64.b64encode(ServiceCreatedBy).decode('utf-8')
+
+
+     service = {"Service name":nameCoded,"Password":passwordCoded,"Creator":createdByCoded}
+    
+     print(" ")
+     print("El servicio es: ")
+     print(service)
+     print("   ")
+     jsonData = json.dumps(service, ensure_ascii=False)
+          
+     return jsonData
+
+def encrypt(plainText,key):
+    textBytes = plainText.encode('utf-8')
+    keyBytes = key.encode('utf-8')
+    
+    iv = get_random_bytes(16)
+    paddedText = textBytes + b"\0"*(AES.block_size - len(textBytes)%AES.block_size)
+    cipher = AES.new(keyBytes, AES.MODE_CBC, iv)
+
+
+def AddService(userName, userPassword, fileName):
+    # with open(fileName) as file:
+    #     jsonData = json.load(file)
+    jsonData = getJson(fileName)
+
+    condition = True
+    while condition:
+        user = getUserData(userName, jsonData)
+        name = input("Ingresa el nombre del servicio: ")
+        if name == "":
+            condition = False
+            break
+        password = input("Ingrese la contraseña: ")
+        createdBy = userName
+        service = asignService(name, password, createdBy, userPassword)
+        
+        # Agregar el objeto JSON de servicio al arreglo "Servicios" del diccionario de usuario
+        user["Servicios"].append(json.loads(service))
+        
+        # Escribir el diccionario actualizado en el archivo
+        try:
+            with open(fileName, "w") as file:
+                json.dump(jsonData, file, ensure_ascii=False)
+            print("Se ha agregado el servicio con éxito")
+        except Exception as e:
+            traceback.print_exc()
+            print("Ocurrió un error", e)
+            break
+    
+    encryptedText= cipher.encrypt(paddedText)
+    return iv + encryptedText
+
+
+
+
+def ShowService(userName,userPassword,fileName):
+    jsonData = getJson(fileName)
+    user = getUserData(userName,jsonData)
+    services = user["Servicios"]  
+    for service in services:
+        
+        
+        
+        # display =decrypt(service["Service name"],userPassword)
+        display = reverseEngineering(service["Service name"],service["Password"],service["Creator"],userPassword)
+
+        
+        print(display)  
+def reverseEngineering(nameCoded,passwordCoded,createdByCoded,userPassword):
+
+     nameDecoded = base64.b64decode(nameCoded)
+     passwordDecoded = base64.b64decode(passwordCoded)
+     createdByDecoded = base64.b64decode(createdByCoded)
+
+     ServiceName= nameDecoded.decode('utf-8')
+     ServicePassword= passwordDecoded.decode('utf-8')
+     ServiceCreatedBy= createdByDecoded.decode('utf-8')
+     
+     name = decrypt(ServiceName,userPassword)
+     password = decrypt(ServicePassword,userPassword)
+     createdBy = decrypt(ServiceCreatedBy,userPassword)
+
+     service = {"Service name":name,"Password":password,"Creator":createdBy}
+    
+     print(" ")
+     print("El servicio es: ")
+     print(service)
+     print("   ")
+     jsonData = json.dumps(service, ensure_ascii=False) 
+     return jsonData
+
+
+def decrypt(cipherText, key):
+    iv = cipherText[:16]
+    keyBytes = key.encode('utf-8')
+    cipher = AES.new(keyBytes, AES.MODE_CBC, iv)
+    decryptedText = cipher.decrypt(cipherText[16:])
+    return decryptedText.rstrip(b"\0").decode('utf-8')
+
+ 
+Y tengo estos otros métodos, pretendo que la información guardada con ayuda de las funciones de AddService(),assignService(), y encrypt(). Pueda ser desencriptada por el usuario con su contraseña(ya que es la key del AES), mediante estos métodos, pero algo no resulta. Trate de hacer ingeniería inversa pero no resulto. ¿Puedes ayudarme?
