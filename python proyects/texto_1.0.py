@@ -186,10 +186,8 @@ def reverseEngineering(nameCoded, passwordCoded, createdByCoded, userPassword):
 
     print(" ")
     print("El servicio es: ")
-    print(service)
     print("   ")
-    jsonData = json.dumps(service, ensure_ascii=False)
-    return jsonData
+    return service
 
 
     
