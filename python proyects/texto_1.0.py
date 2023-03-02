@@ -281,6 +281,8 @@ def encrypt(plainText,key):
     textBytes = plainText.encode('utf-8')
     keyBytes = key.encode('utf-8')
     
+    
+    
     iv = get_random_bytes(16)
     paddedText = textBytes + b"\0"*(AES.block_size - len(textBytes)%AES.block_size)
     cipher = AES.new(keyBytes, AES.MODE_CBC, iv)
