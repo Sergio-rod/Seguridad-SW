@@ -85,6 +85,7 @@ def AddService(userName, userPassword, fileName):
 
     condition = True
     while condition:
+        print(userName)
         user = getUserData(userName, jsonData)
         name = input("Ingresa el nombre del servicio: ")
         if name == "":
@@ -195,14 +196,15 @@ def reverseEngineering(nameCoded, passwordCoded, createdByCoded, userPassword):
 def printJson(jsonData):
     for index, object in enumerate(jsonData):
         print(f"{index}. {object}")
-        
+
 def getUserData(userName, jsonData):
+  
     for user in jsonData:
         if user["Username"]==userName:
             return user
-        else:
-            print("No se encontró usuario") 
-            return None 
+    
+    print("No se encontró usuario") 
+    return None
         
         
 def getServiceData(userName, serviceName, jsonData):
@@ -234,6 +236,8 @@ def getJson(fileName):
     except:
         print("El json no es válido")
 
+
+
 def fileExists(fileName):
     try:
         return os.path.isfile(fileName)
@@ -243,7 +247,7 @@ def fileExists(fileName):
 def subMenu(userName,userPassword,fileName):
     condition = True
     while condition:
-        print(f"-----------Hola,{name}----------"," ¿Qué deseas hacer?")
+        print(f"-----------Hola,{userName}----------"," ¿Qué deseas hacer?")
         print("1) Agregar servicios", "2) Ver servicios", "3) Eliminar servicio", "4) Editar Servicio","5) Salir")
         print("")
         
@@ -260,7 +264,7 @@ def subMenu(userName,userPassword,fileName):
         elif y == 3:
             
             serviceName = input("Ingrese el nombre del servicio que desea eliminar: ")
-            DeleteService(name,serviceName,fileName)
+            DeleteService(userName,serviceName,fileName)
             
         elif y==4:
             serviceName = input("Ingrese el nombre del servicio que desea editar: ")
@@ -277,27 +281,52 @@ def subMenu(userName,userPassword,fileName):
             
         else: print("Ingresa una opción valida")
         
+# def encrypt(plainText,key):
+#     textBytes = plainText.encode('utf-8')
+#     keyBytes = key.encode('utf-8')
+    
+    
+#     iv = get_random_bytes(16)
+#     paddedText = textBytes + b"\0"*(AES.block_size - len(textBytes)%AES.block_size)
+#     cipher = AES.new(keyBytes, AES.MODE_CBC, iv)
+    
+#     encryptedText= cipher.encrypt(paddedText)
+#     return iv + encryptedText
+
 def encrypt(plainText,key):
     textBytes = plainText.encode('utf-8')
     keyBytes = key.encode('utf-8')
     
     
-    
     iv = get_random_bytes(16)
+    paddedKey = keyBytes + b"\0"*(AES.block_size - len(keyBytes)%AES.block_size)
     paddedText = textBytes + b"\0"*(AES.block_size - len(textBytes)%AES.block_size)
-    cipher = AES.new(keyBytes, AES.MODE_CBC, iv)
+    cipher = AES.new(paddedKey, AES.MODE_CBC, iv)
     
     encryptedText= cipher.encrypt(paddedText)
     return iv + encryptedText
+
+# def decrypt(cipherText, key):
+    
+#     iv = cipherText[:16]
+#     cipherBytes = cipherText[16:]
+#     keyBytes = key.encode('utf-8')
+#     #linea nueva
+#     paddedKey = keyBytes + b"\0"*(AES.block_size - len(keyBytes)%AES.block_size)
+#     #
+#     cipher = AES.new(keyBytes, AES.MODE_CBC, iv)
+#     decryptedText = cipher.decrypt(cipherBytes)
+#     return decryptedText.rstrip(b"\0").decode('utf-8')
+
 
 def decrypt(cipherText, key):
     iv = cipherText[:16]
     cipherBytes = cipherText[16:]
     keyBytes = key.encode('utf-8')
-    cipher = AES.new(keyBytes, AES.MODE_CBC, iv)
+    paddedKey = keyBytes + b"\0"*(AES.block_size - len(keyBytes)%AES.block_size)
+    cipher = AES.new(paddedKey, AES.MODE_CBC, iv)
     decryptedText = cipher.decrypt(cipherBytes)
     return decryptedText.rstrip(b"\0").decode('utf-8')
-
 
 
 def getKeyBytes(keyString):
