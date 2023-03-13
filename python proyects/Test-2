@@ -1,110 +1,551 @@
-def asignService(name,password,createdBy,userPassword):
-     ServiceName= encrypt(name,userPassword)
-     ServicePassword= encrypt(password,userPassword)
-     ServiceCreatedBy= encrypt(createdBy,userPassword)
-    
-     nameCoded = base64.b64encode(ServiceName).decode('utf-8')
-     passwordCoded = base64.b64encode(ServicePassword).decode('utf-8')
-     createdByCoded = base64.b64encode(ServiceCreatedBy).decode('utf-8')
+import json
+import hashlib
+from turtle import back
+from cryptography.fernet import Fernet
+import base64
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+import secrets
+from Crypto.Cipher import AES
+import binascii
+import os 
+from os import remove
+from os import path
+
+characters = '"{'
+_user = ""
+_sha256 = ""
+_sha512 = ""
+login_salt = b'4753a4026cf8e999f6fa91d30fc14620'
+import shutil
 
 
-     service = {"Service name":nameCoded,"Password":passwordCoded,"Creator":createdByCoded}
-    
-     print(" ")
-     print("El servicio es: ")
-     print(service)
-     print("   ")
-     jsonData = json.dumps(service, ensure_ascii=False)
-          
-     return jsonData
+def backup(option):
+	if option == "set":
+		shutil.copy('texto.txt', 'backup.hide')
+	if option == "get":
+		shutil.copy('backup.hide', 'texto.txt')
 
-def encrypt(plainText,key):
-    textBytes = plainText.encode('utf-8')
-    keyBytes = key.encode('utf-8')
-    
-    iv = get_random_bytes(16)
-    paddedText = textBytes + b"\0"*(AES.block_size - len(textBytes)%AES.block_size)
-    cipher = AES.new(keyBytes, AES.MODE_CBC, iv)
+def openWhenLoad(interfaz):
+	try:
+		file = open("texto.txt","r") 
+		cadena = file.read()
+		loadjson = json.loads(cadena)
+		file.close()
+		backup("set")
+	except FileNotFoundError:
+		if path.exists("backup.hide"):
+			backup("get")
+			try:
+				file = open("texto.txt","r") 
+				cadena = file.read()
+				loadjson = json.loads(cadena)	
+				file.close()
+			except json.decoder.JSONDecodeError:
+				file = open("texto.txt","w") 
+				file.write('{"accounts": []}')
+				file.close()	
+				print("\x1b[0;30m"+"JSON corrompido. Generando archivo texto.txt\n")
+				print("\x1b[0;37m"+"\n")			
+		else:
+			file = open("texto.txt","w") 
+			file.write('{"accounts": []}')
+			file.close()
+			backup("set")
+			print("\x1b[0;30m"+"Generando archivo texto.txt\n")
+			print("\x1b[0;37m"+"\n")
+	except json.decoder.JSONDecodeError:
+		if path.exists("backup.hide"):
+			backup("get")
+			print("\x1b[0;30m"+"JSON corrupto. Se restauró la última copia de seguridad.")
+			print("\x1b[0;37m"+"\n")	
+	except PermissionError:
+		print("😕 El archivo está siendo usado por otro proceso!\n")
+		if option == 0:
+			start()
+		if option == 1:
+			sigin()
+		if option == 2:
+			add()
+		if option == 3:
+			showAll()
+		if option == 4:
+			showElement()
+		if option == 5:
+			deleteElement()
+		if option == 6:
+			ingresar()
+		if option == 7:	
+			editElement()
+				
+def recoverUser():
+	try:
+		file=open("texto.txt")
+		file.close()
+	except:
+		file = open("texto.txt","w")
+		file.write('{"accounts": []}')
+		file.close()
+		file = open("texto.txt","r") 
+		cadena = file.read()
+		loadjson = json.loads(cadena)
+		file.close()
+		loadjson['accounts'].append(
+			{
+				"username": _user,
+				"_pass": _sha256,
+				"services": [	
+				]
+			}
+		)
+		file = open("texto.txt","w") 
+		json.dump(loadjson, file, indent=4)
+		file.close()
+		print("\x1b[0;30m"+"Recuperando usuario\n")
+		print("\x1b[0;37m"+"\n")
+#def encrypt(key, data):
+#	kdf = PBKDF2HMAC(
+#        algorithm=hashes.SHA512,
+#        length=32,
+#        salt=login_salt,
+#        iterations=100000,
+#        backend=default_backend(),
+#    )
+#	encryption_key = kdf.derive(key)
+#	aesCipher = AES.new(encryption_key, AES.MODE_GCM)
+#	ciphertext, authTag = aesCipher.encrypt_and_digest(data)
+#	print(decrypt(encryption_key, ciphertext))
+#	return binascii.hexlify(ciphertext)
+
+#def decrypt(key, data):
+#    (ciphertext, authTag) = data
+#    aesCipher = AES.new(key, AES.MODE_GCM)
+#    plaintext = aesCipher.decrypt_and_verify(ciphertext, authTag)
+#    return plaintext
+def keys():
+	kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA512,
+        length=32,
+        salt=login_salt,
+        iterations=100000,
+        backend=default_backend(),
+    )
+	newhash = hashlib.sha512(_sha256.encode('utf-8')).hexdigest()
+	newhash = bytes(newhash,encoding = "utf-8")
+	der = base64.urlsafe_b64encode(kdf.derive(newhash))
+	return der
+
+def encrypt(data):
+	try:
+		encryption_key = keys()
+		encryption_key_fernet = Fernet(encryption_key)
+		encrypt_info = encryption_key_fernet.encrypt(data)
+		return(encrypt_info.decode())
+	except:
+		print("⚠	Archivo corrupto.")
+		menuLogin()
+
+def decrypt(data):
+	try:
+		dencryption_key = keys()
+		data= data.encode("utf-8")
+		dencryption_key_fernet = Fernet(dencryption_key)
+		dencrypt_info = dencryption_key_fernet.decrypt(data)
+		return(dencrypt_info.decode())
+	except:
+		print("⚠	Archivo corrupto.")
+		menuLogin()
+
+def sigin():
+	try:
+		loadjson = []
+		openWhenLoad(1)
+		file = open("texto.txt","r")
+		cadena = file.read()
+		file.close()
+		loadjson = json.loads(cadena)
+		counter = 0
+		username = input("👤	Introduce un nombre de usuario\n")
+		while username.strip() == "":
+			username = input("👤	Introduce un nombre de usuario, no un espacio vacío\n")
+		for idx, obj in enumerate(loadjson.get('accounts')):		
+			if obj['username'] == username:
+				counter += 1
+		if (counter > 0):
+			print("👤❌	Este nombre de usuario ya está en uso.\n")
+			sigin()
+		else:
+			_pass = input("🔑	Introduce una contraseña\n")
+			while _pass.strip() == "":
+				_pass = input("🔑	Introduce una contraseña, no un espacio vacío\n")
+			my_hash = hashlib.sha256(_pass.encode('utf-8')).hexdigest()
+			loadjson['accounts'].append(
+				{
+					"username": username,
+					"_pass": my_hash,
+					"services": [	
+					]
+				}
+			)
+			openWhenLoad(1)
+			file = open("texto.txt","w")
+			json.dump(loadjson, file, indent=4)
+			file.close()
+			print("\x1b[0;32m"+"✅	Registro exitoso!\n")
+			start()
+	except KeyboardInterrupt:
+		print("🤩 Saliendo del formulario.")
+		start()
+	except EOFError:
+		print("🤩 Entrada incorrecta.")
+		sigin()
+
+def add():
+	try:
+		servicio = input("⛽	Introduce un servicio\n")
+		while servicio.strip() == "":
+			servicio = input("⛽ Introduce un servicio! \n")
+		user = input("👤	Introduce un usuario\n")
+		while user.strip() == "":
+			user = input("👤	Introduce un usuario\n")
+		password = input("🔑	Introduce una password\n")
+		while password.strip() == "":
+			password = input("🔑	Introduce una password\n")
+		recoverUser()
+		openWhenLoad(2)
+		file = open("texto.txt","r")
+		cadena = file.read()
+		file.close()
+		loadjson = json.loads(cadena)
+		x_x = 0
+		for idx, obj in enumerate(loadjson['accounts']):
+			if(obj['username'] == _user and obj['_pass'] == _sha256):
+				loadjson["accounts"][idx]["services"].append({
+				"service": encrypt(bytes(servicio,encoding="utf-8")),
+				"user": encrypt(bytes(user,encoding="utf-8")),
+				"pass": encrypt(bytes(password,encoding="utf-8"))})
+				file = open("texto.txt","w")
+				json.dump(loadjson, file, indent=4)
+				file.close()
+				x_x +=1
+		if x_x == 0:
+			print("Se han modificado las credenciales. Saliendo...")
+			start()
+	except KeyboardInterrupt:
+		print("🤩 Saliendo del formulario.")
+		menuLogin()
+	except EOFError:
+		print("🤩 Entrada incorrecta.")
+		add()
+def showAll():
+	try:
+		recoverUser()
+		file=open("texto.txt","r")
+		print("-----mostrando " + file.name + "-------------")
+		print(_user)
+		openWhenLoad(3)
+		loadjson = json.load(file)
+
+		x_x = 0
+		file.close()
+		for idx, obj in enumerate(loadjson['accounts']):
+			if (obj['username'] == _user and obj['_pass'] == _sha256):
+				newobj = obj['services']
+				for idxs, data in enumerate(newobj):
+					print("[" + str(x_x) + "] Service: " + decrypt(data['service']) + ", User: " + decrypt(data['user'])+ ", Pass: " + decrypt(data['pass']))
+					x_x += 1
+		
+
+	except KeyboardInterrupt:
+		print("🤩 Reiniciando formulario.")
+		showAll()
+	except EOFError:
+		print("🤩 Reiniciando formulario.")
+		showAll()
+
+def showElement():
+	try:
+		newobj = []
+		openWhenLoad(4)
+		file=open("texto.txt","r")
+		loadjson = json.load(file)
+		file.close()
+		x_x = 0
+		print("-----mostrando " + file.name + "-------------")
+		for idx, obj in enumerate(loadjson['accounts']):
+			if (obj['username'] == _user):
+				newobj = obj['services']
+				for idxs, data in enumerate(newobj):
+					print("[" + str(x_x) + "] Service: " + decrypt(data['service']))
+					x_x += 1
+		if x_x == 0:
+			print("📝		No hay registros para mostrar. ")
+			menuLogin()
+		else:
+			ids = input("🛒	Introduce un indice de un elemento:\n")
+			bolillo = False
+			bolillo2 = False
+			while bolillo == False or bolillo2 == False:
+				if str(ids).isdigit()==False:
+					bolillo = False
+				else:
+					bolillo = True
+					if (int(ids) < 0 or int(ids)>=x_x):
+						bolillo2 = False
+					else:
+						bolillo2	= True
+				if bolillo == False:
+					ids = input("🛒	Introduce un indice numérico de un elemento:\n")
+				else:
+					if bolillo2 == False:
+						ids = input("🛒	Introduce un indice válido de un elemento:\n")
+			ids = int(ids)
+			openWhenLoad(4)
+			print("[" + str(ids) + "] Service: " + decrypt(newobj[ids]['service']) + ", User: " + decrypt(newobj[ids]['user']) + ", Pass: " + decrypt(newobj[ids]['pass']))
+	except KeyboardInterrupt:
+		print("🤩 Saliendo al menú principal.")
+		menuLogin()
+	except EOFError:
+		print("🤩 Entrada no válida.")
+		showElement()
 
 
-def AddService(userName, userPassword, fileName):
-    # with open(fileName) as file:
-    #     jsonData = json.load(file)
-    jsonData = getJson(fileName)
+def deleteElement():
+	try:
+		openWhenLoad(5)
+		file=open("texto.txt","r")
+		print("-----mostrando " + file.name + "-------------")
+		loadjson = json.load(file)
+		file.close()
+		_hash512 = hashlib.sha512(_sha256.encode('utf-8')).hexdigest()
+		_hash512 = bytes(_hash512,encoding = "utf-8")
+		ida=0
+		x_x= 0
+		for idx, obj in enumerate(loadjson['accounts']):
+			if (obj['username'] == _user):
+				newobj = obj['services']
+				ida = idx
+				for idxs, data in enumerate(newobj):
+					print("[" + str(x_x) + "] Service: " + decrypt(data['service']) + ", User: " + decrypt(data['user']) + ", Pass: " + decrypt(data['pass']))
+					x_x += 1
 
-    condition = True
-    while condition:
-        user = getUserData(userName, jsonData)
-        name = input("Ingresa el nombre del servicio: ")
-        if name == "":
-            condition = False
-            break
-        password = input("Ingrese la contraseña: ")
-        createdBy = userName
-        service = asignService(name, password, createdBy, userPassword)
-        
-        # Agregar el objeto JSON de servicio al arreglo "Servicios" del diccionario de usuario
-        user["Servicios"].append(json.loads(service))
-        
-        # Escribir el diccionario actualizado en el archivo
-        try:
-            with open(fileName, "w") as file:
-                json.dump(jsonData, file, ensure_ascii=False)
-            print("Se ha agregado el servicio con éxito")
-        except Exception as e:
-            traceback.print_exc()
-            print("Ocurrió un error", e)
-            break
-    
-    encryptedText= cipher.encrypt(paddedText)
-    return iv + encryptedText
+		if x_x == 0:
+			print("📝		No hay registros para mostrar. ")
+			menuLogin()
+		else:
+			bolillo = False
+			bolillo2 = False
+			ids = input("🛒	Introduce un indice de un elemento:\n")
+			while bolillo == False or bolillo2 == False:
+				if str(ids).isdigit()==False:
+					bolillo = False
+				else:
+					bolillo = True
+					if (int(ids) < 0 or int(ids)>=x_x):
+						bolillo2 = False
+					else:
+						bolillo2	= True
+				if bolillo == False:
+					ids = input("🛒	Introduce un indice numérico de un elemento:\n")
+				else:
+					if bolillo2 == False:
+						ids = input("🛒	Introduce un indice válido de un elemento:\n")
+			ids = int(ids)
+			loadjson["accounts"][ida]["services"].pop(ids)
+			openWhenLoad(5)
+			file = open("texto.txt","w")
+			json.dump(loadjson, file, indent=4)
+			file.close()
+			
+	except KeyboardInterrupt:
+		print("🤩 Reiniciando formulario.")
+		deleteElement()
+	except EOFError:
+		print("🤩 Reiniciando formulario.")
+		deleteElement()
 
+def ingresar():
+	try:
+		print("\x1b[1;36m"+"▬▬▬▬▬▬▬▬▬▬▬ LOGIN ▬▬▬▬▬▬▬▬▬▬")
+		global _user
+		global _sha512
+		global _sha256
+		usr = input("\x1b[1;37m"+"👤	Usuario: ")
+		while usr == "":
+			usr = input("\x1b[1;37m"+"👤	Usuario: ")
+		openWhenLoad(6)
+		file=open("texto.txt","r")
+		loadjson = json.load(file)
+		file.close()
+		counter = 0
+		psw = ""
+		for idx, obj in enumerate(loadjson.get('accounts')):		
+			if obj['username'] == usr:
+				counter += 1
+				psw = obj['_pass']
+		if (counter > 0):
+			voli = False 
+			while (voli == False):
+				pswt = input ("🔑	Contraseña: ")
+				while pswt == "":
+					pswt = input ("🔑	Contraseña: ")
+				my_hash = hashlib.sha256(pswt.encode('utf-8')).hexdigest()
+				if pswt == "":
+					print("🕳↓ Espacio en blanco...")
+				else:
+					if psw == my_hash:
+						voli = True
+						_sha256 = my_hash
+						_user = usr
+						menuLogin()
+						keys(_sha256)
+					else:
+						print("🔑❌	Credencial no encontrada. ")
+		else:
+			ing = input("Usuario no encontrado, ¿deseas registrarte? (1️⃣.- Sí	2️⃣.- No	3️⃣.-Menú): ")
+			bolillo = False
+			while bolillo == False:
+				if ing.isdigit():
+					if (ing == "1"):
+						bolillo = True
+						sigin()
+					elif ing == "2":
+						bolillo = True
+						ingresar()
+						_user=usr
+					elif ing =="3":
+						bolillo = True
+						start()
+					else:
+						print("💢 Valor fuera del rango.")
+						ing = input("Usuario no encontrado, ¿deseas registrarte? (1️⃣.- Sí	2️⃣.- No	3️⃣.-Menú): ")
+				else:
+					print("❌ La entrada no es numérica!")
+					ing = input("Usuario no encontrado, ¿deseas registrarte? (1️⃣.- Sí	2️⃣.- No	3️⃣.-Menú): ")
+	except KeyboardInterrupt:
+		print("\n🤩 Saliendo del formulario.")
+		start()
+	except EOFError:
+		print("\n❌ La entrada no es correcta!")
+		ingresar()
 
+			
+   			
+def editElement():
+	openWhenLoad(7)
+	file=open("texto.txt","r")
+	print("-----mostrando " + file.name + "-------------")
+	loadjson = json.load(file)
+	file.close()
+	ida = 0
+	x_x= 0
+	for idx, obj in enumerate(loadjson['accounts']):
+		if (obj['username'] == _user):
+			newobj = obj['services']
+			ida = idx
+			for idxs, data in enumerate(newobj):
+				print("[" + str(x_x) + "] Service: " + decrypt(data['service']) + ", User: " + decrypt(data['user']) + ", Pass: " + decrypt(data['pass']))
+				x_x += 1
 
+	if x_x == 0:
+		print("📝		No hay registros para mostrar. ")
+		menuLogin()
+	else:
+		ids = input("🛒	Introduce un indice de un elemento a editar:\n")
+		bolillo = False
+		bolillo2 = False
+		while bolillo == False or bolillo2 == False:
+			if str(ids).isdigit()==False:
+				bolillo = False
+			else:
+				bolillo = True
+				if (int(ids) < 0 or int(ids)>=x_x):
+					bolillo2 = False
+				else:
+					bolillo2	= True
+			if bolillo == False:
+				ids = input("🛒	Introduce un indice numérico de un elemento a editar:\n")
+			else:
+				if bolillo2 == False:
+					ids = input("🛒	Introduce un indice válido de un elemento a editar:\n")
+		ids = int(ids)
 
-def ShowService(userName,userPassword,fileName):
-    jsonData = getJson(fileName)
-    user = getUserData(userName,jsonData)
-    services = user["Servicios"]  
-    for service in services:
-        
-        
-        
-        # display =decrypt(service["Service name"],userPassword)
-        display = reverseEngineering(service["Service name"],service["Password"],service["Creator"],userPassword)
+		servicio = input("⛽	Editando servicio\n")
+		while servicio == "":
+			servicio = input("⛽ Editando servicio, sabe! \n")
+		user = input("👤	Editando usuario\n")
+		while user == "":
+			user = input("👤	Editando usuario, sabe!\n")
+		password = input("🔑	Editando password\n")
+		while password == "":
+			password = input("🔑	Editando password, sabe!\n") 
+		openWhenLoad(7)
+		loadjson["accounts"][ida]["services"][int(ids)]['service'] = encrypt(bytes(servicio, encoding = "utf-8"))
+		loadjson["accounts"][ida]["services"][int(ids)]['user'] = encrypt(bytes(user, encoding = "utf-8"))
+		loadjson["accounts"][ida]["services"][int(ids)]['pass'] = encrypt(bytes(password, encoding = "utf-8"))
+		openWhenLoad(7)
+		recoverUser()
+		file = open("texto.txt","w")
+		json.dump(loadjson, file, indent=4)
+		file.close()			
 
-        
-        print(display)  
-def reverseEngineering(nameCoded,passwordCoded,createdByCoded,userPassword):
+def start():
+	try:
+		openWhenLoad(0)
+		entrada = input("\x1b[0;37m"+"1️⃣ Ingresar\n2️⃣ Registrar\n3️⃣ Salir\n")
+		if entrada.isdigit():
+			if entrada == "1":
+				ingresar()
+			elif entrada == "2":
+				sigin()
+			elif entrada=="3":
+				exit()
+			else:
+				print("💢 Valor fuera del rango.")
+				start()
+		else:
+			print("❌ La entrada no es numérica!")
+			start()
 
-     nameDecoded = base64.b64decode(nameCoded)
-     passwordDecoded = base64.b64decode(passwordCoded)
-     createdByDecoded = base64.b64decode(createdByCoded)
+	except KeyboardInterrupt:
+		print("\n🤩 Alto ahí, loca.")
+		start()
+	except EOFError:
+		print("\n❌ La entrada no es correcta!")
+		start()
 
-     ServiceName= nameDecoded.decode('utf-8')
-     ServicePassword= passwordDecoded.decode('utf-8')
-     ServiceCreatedBy= createdByDecoded.decode('utf-8')
-     
-     name = decrypt(ServiceName,userPassword)
-     password = decrypt(ServicePassword,userPassword)
-     createdBy = decrypt(ServiceCreatedBy,userPassword)
+	
 
-     service = {"Service name":name,"Password":password,"Creator":createdBy}
-    
-     print(" ")
-     print("El servicio es: ")
-     print(service)
-     print("   ")
-     jsonData = json.dumps(service, ensure_ascii=False) 
-     return jsonData
-
-
-def decrypt(cipherText, key):
-    iv = cipherText[:16]
-    keyBytes = key.encode('utf-8')
-    cipher = AES.new(keyBytes, AES.MODE_CBC, iv)
-    decryptedText = cipher.decrypt(cipherText[16:])
-    return decryptedText.rstrip(b"\0").decode('utf-8')
-
- 
-Y tengo estos otros métodos, pretendo que la información guardada con ayuda de las funciones de AddService(),assignService(), y encrypt(). Pueda ser desencriptada por el usuario con su contraseña(ya que es la key del AES), mediante estos métodos, pero algo no resulta. Trate de hacer ingeniería inversa pero no resulto. ¿Puedes ayudarme?
+def menuLogin():
+	try:
+		option=""
+		while option != "0":
+			print("0️⃣.-logout 1️⃣.-add 2️⃣.-show all 3️⃣.-show element 4️⃣.-delete element 5️⃣.-edit element")
+			option = input()
+			if option.isdigit():
+				if option == "1":
+					add()
+				elif option == "2":
+					showAll()
+				elif option == "3":
+					showElement()
+				elif option == "4":
+					deleteElement()
+				elif option == "5":
+					editElement()
+				elif option == "0":
+					start()
+				else:
+					print("El valor excede el rango permitido.\n")
+					menuLogin()
+			else:
+				print("Valor numérico requerido.\n")
+				menuLogin()
+	except KeyboardInterrupt:
+		print("\n🤩 Debes cerrar sesión primero.")
+		menuLogin()
+	except EOFError:
+		print("\n❌ La entrada no es correcta!")
+		menuLogin()
+start()

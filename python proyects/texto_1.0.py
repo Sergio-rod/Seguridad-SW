@@ -79,8 +79,6 @@ def FuncSha512(password):
 #ADICIÓN DE SERVICIO
 
 def AddService(userName, userPassword, fileName):
-    # with open(fileName) as file:
-    #     jsonData = json.load(file)
     jsonData = getJson(fileName)
 
     condition = True
@@ -115,15 +113,12 @@ def ShowService(userName,userPassword,fileName):
     services = user["Servicios"]  
     for service in services:
         
-        
-        
-        # display =decrypt(service["Service name"],userPassword)
         display = reverseEngineering(service["Service name"],service["Password"],service["Creator"],userPassword)
 
         
         print(display)  
           
-def DeleteService(userName, serviceName,fileName):
+def DeleteService(userName, serviceName,fileName, userPassword):
     jsonData = getJson(fileName)
     userData = getUserData(userName,jsonData)
     dropService = getServiceData(userName,serviceName,jsonData)
@@ -151,7 +146,7 @@ def ServiceUpdated(name,password):
     
 
         
-#EXTRAS-----------------------------------------------------------------------------
+#--------------------EXTRAS------Servicios-----------------------------------------------------------------------
 def asignService(name,password,createdBy,userPassword):
      ServiceName= encrypt(name,userPassword)
      ServicePassword= encrypt(password,userPassword)
@@ -189,8 +184,6 @@ def reverseEngineering(nameCoded, passwordCoded, createdByCoded, userPassword):
     print("El servicio es: ")
     print("   ")
     return service
-
-
     
 
 def printJson(jsonData):
@@ -202,7 +195,6 @@ def getUserData(userName, jsonData):
     for user in jsonData:
         if user["Username"]==userName:
             return user
-    
     print("No se encontró usuario") 
     return None
         
@@ -216,6 +208,9 @@ def getServiceData(userName, serviceName, jsonData):
                     return service
             print("No se encontró el servicio")
             return None    
+        
+        
+#---------------------EXTRAS--USUARIOS----------------------#
 
 def existMail(mail, jsonData):
     if len(jsonData)==0:
@@ -227,7 +222,7 @@ def existMail(mail, jsonData):
     return True
         
             
-
+#---------------------SOLO--EXTRAS------------#
 def getJson(fileName):
     try:
         with open(fileName, 'r') as file:
@@ -236,62 +231,12 @@ def getJson(fileName):
     except:
         print("El json no es válido")
 
-
-
 def fileExists(fileName):
     try:
         return os.path.isfile(fileName)
     except:
         return False
     
-def subMenu(userName,userPassword,fileName):
-    condition = True
-    while condition:
-        print(f"-----------Hola,{userName}----------"," ¿Qué deseas hacer?")
-        print("1) Agregar servicios", "2) Ver servicios", "3) Eliminar servicio", "4) Editar Servicio","5) Salir")
-        print("")
-        
-        y = int(input("Ingrese la opción deseada (1,2,3,4,5)"))
-        
-        if y==1:
-            AddService(userName, userPassword, fileName)
-        elif y==2:
-            print("")
-
-            ShowService(userName,userPassword,fileName)
-            print("")
-      
-        elif y == 3:
-            
-            serviceName = input("Ingrese el nombre del servicio que desea eliminar: ")
-            DeleteService(userName,serviceName,fileName)
-            
-        elif y==4:
-            serviceName = input("Ingrese el nombre del servicio que desea editar: ")
-            newName= input("Ingresa el nuevo nombre del servicio: ")
-            newPass= input("Ingresa la nueva contraseña del servicio: ")
-
-            newServiceData = ServiceUpdated(newName,newPass)
-            
-            AlterService(userName, serviceName, newServiceData, fileName)
-        elif y==5:
-            print("Adios")
-            condition=False
-            exit()
-            
-        else: print("Ingresa una opción valida")
-        
-# def encrypt(plainText,key):
-#     textBytes = plainText.encode('utf-8')
-#     keyBytes = key.encode('utf-8')
-    
-    
-#     iv = get_random_bytes(16)
-#     paddedText = textBytes + b"\0"*(AES.block_size - len(textBytes)%AES.block_size)
-#     cipher = AES.new(keyBytes, AES.MODE_CBC, iv)
-    
-#     encryptedText= cipher.encrypt(paddedText)
-#     return iv + encryptedText
 
 def encrypt(plainText,key):
     textBytes = plainText.encode('utf-8')
@@ -306,17 +251,6 @@ def encrypt(plainText,key):
     encryptedText= cipher.encrypt(paddedText)
     return iv + encryptedText
 
-# def decrypt(cipherText, key):
-    
-#     iv = cipherText[:16]
-#     cipherBytes = cipherText[16:]
-#     keyBytes = key.encode('utf-8')
-#     #linea nueva
-#     paddedKey = keyBytes + b"\0"*(AES.block_size - len(keyBytes)%AES.block_size)
-#     #
-#     cipher = AES.new(keyBytes, AES.MODE_CBC, iv)
-#     decryptedText = cipher.decrypt(cipherBytes)
-#     return decryptedText.rstrip(b"\0").decode('utf-8')
 
 
 def decrypt(cipherText, key):
@@ -339,33 +273,92 @@ def getKeyBytes(keyString):
     
 #------------------------------------TERMINA EXTRAS----------------------------------------------------------------------
 
+
+#-------MENUS---#
     
     
+def Menu (fileName):
+    condition = True
+    while condition:
+
+        print("------------Opciones-------------")
+        print("1) Registrar Usuario ", "2) Iniciar sesión ", "3) Salir ")    
+        
+        try:
+            x = int(input("Ingresa lo que desees hacer (1,2,3)"))
+            if x == 1:
+                AddUser(fileName)
+            elif x == 2:
+                name = input("Ingresa el nombre de usuario: ")
+                password = input("Ingresa la contraseña: ")
+
+                banner = loginUser(name, password, fileName)
+                if banner: subMenu(name, password, fileName)
+                else: print("Intentalo de nuevo")
+            elif x == 3:
+                condition = False
+                (lambda: (print("Adios"), exit()))
+            else:
+                print("Ingresa una acción valida")
+       
+       
+       
+        except: print("Debes ingresar un número válido 1, 2 o 3") 
+
+        
+
+def subMenu(userName,userPassword,fileName):
+    condition = True
+    
+    while condition:
+        print(f"-----------Hola,{userName}----------"," ¿Qué deseas hacer?")
+        print("1) Agregar servicios", "2) Ver servicios", "3) Eliminar servicio", "4) Editar Servicio","5) Salir")
+        print("")
+        
+        try:
+            y = int(input("Ingrese la opción deseada (1,2,3,4,5)"))
+        
+            if y==1:
+                AddService(userName, userPassword, fileName)
+            elif y==2:
+                print("")
+
+                ShowService(userName,userPassword,fileName)
+                print("")
+      
+            elif y == 3:
+            
+                serviceName = input("Ingrese el nombre del servicio que desea eliminar: ")
+                DeleteService(userName,serviceName,fileName)
+            
+            elif y==4:
+                serviceName = input("Ingrese el nombre del servicio que desea editar: ")
+                newName= input("Ingresa el nuevo nombre del servicio: ")
+                newPass= input("Ingresa la nueva contraseña del servicio: ")
+
+                newServiceData = ServiceUpdated(newName,newPass)
+            
+                AlterService(userName, serviceName, newServiceData, fileName)
+            elif y==5:
+                print("Adios")
+                condition=False
+                exit()
+            
+            else: print("Ingresa una opción valida")
+            
+        except:
+            print("Debes ingresar un número válido 1, 2 o 3")
+        
+        
+        
+
     
     
     
 #---------------------------EJECUCIÓN-DE-CÓDIGO---------------------------    
-condition = True
 
-while condition:
-    
-    print("------------Opciones-------------")
-    print("1) Registrar Usuario ", "2) Iniciar sesión ", "3) Salir ")
-    fileName = "prueba2.txt"
-    
-    x = int(input("Ingresa lo que desees hacer (1,2,3)"))
 
-    if x == 1:
-        AddUser(fileName)
-    elif x == 2:
-        name = input("Ingresa el nombre de usuario: ")
-        password = input("Ingresa la contraseña: ")
+fileName= "nuevo.txt"
 
-        banner = loginUser(name, password, fileName)
-        if banner: subMenu(name, password, fileName)
-        else: print("Intentalo de nuevo")
-    elif x == 3:
-        condition = False
-        (lambda: (print("Adios"), exit()))
-    else:
-        print("Ingresa una acción valida")
+Menu(fileName)
+
