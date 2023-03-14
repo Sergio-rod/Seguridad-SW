@@ -120,11 +120,21 @@ def ShowService(userName,userPassword,fileName):
           
 def DeleteService(userName, serviceName,fileName, userPassword):
     jsonData = getJson(fileName)
-    userData = getUserData(userName,jsonData)
-    dropService = getServiceData(userName,serviceName,jsonData)
-    userData["Servicios"].remove(dropService)
-    with open(fileName, "w") as file:
-        json.dump(jsonData, file)
+    user = getUserData(userName,jsonData)
+    services = user["Servicios"]
+    for service in services:
+        
+        dropService = reverseEngineering(service["Service name"],service["Password"],service["Creator"],userPassword)
+        
+        if dropService["Service name"]==serviceName:
+            user["Servicios"].remove(service)
+            with open(fileName, "w") as file:
+                json.dump(jsonData, file)
+            print("Servicio eliminado con éxito")
+            break
+    print("No se encontraron registros")
+            
+        
         
 def AlterService(userName, serviceName, newServiceData, fileName):
     jsonData = getJson(fileName)
@@ -184,6 +194,7 @@ def reverseEngineering(nameCoded, passwordCoded, createdByCoded, userPassword):
     print("El servicio es: ")
     print("   ")
     return service
+
     
 
 def printJson(jsonData):
@@ -199,7 +210,7 @@ def getUserData(userName, jsonData):
     return None
         
         
-def getServiceData(userName, serviceName, jsonData):
+def getServiceData(serviceName):
     for user in jsonData:
         if user["Username"]==userName:
             services = user["Servicios"]
@@ -312,7 +323,7 @@ def subMenu(userName,userPassword,fileName):
     
     while condition:
         print(f"-----------Hola,{userName}----------"," ¿Qué deseas hacer?")
-        print("1) Agregar servicios", "2) Ver servicios", "3) Eliminar servicio", "4) Editar Servicio","5) Salir")
+        print("1) Agregar servicios", "2) Ver servicios", "3) Eliminar servicio", "4) Editar Servicio","5) Cerrar sesión")
         print("")
         
         try:
@@ -329,7 +340,7 @@ def subMenu(userName,userPassword,fileName):
             elif y == 3:
             
                 serviceName = input("Ingrese el nombre del servicio que desea eliminar: ")
-                DeleteService(userName,serviceName,fileName)
+                DeleteService(userName, serviceName,fileName, userPassword)
             
             elif y==4:
                 serviceName = input("Ingrese el nombre del servicio que desea editar: ")
@@ -340,16 +351,16 @@ def subMenu(userName,userPassword,fileName):
             
                 AlterService(userName, serviceName, newServiceData, fileName)
             elif y==5:
-                print("Adios")
+                print("Cerrando...")
                 condition=False
-                exit()
+                break
             
             else: print("Ingresa una opción valida")
             
-        except:
-            print("Debes ingresar un número válido 1, 2 o 3")
-        
-        
+        except Exception as e:
+            traceback.print_exc()
+            print("Debes ingresar un número válido 1, 2, 3, 4, o 5", e)
+            
         
 
     
