@@ -1,0 +1,95 @@
+def AlterService(userName, serviceName,fileName, userPassword,newServiceName,newServicePass):
+    jsonData = getJson(fileName)
+    user = getUserData(userName, jsonData)
+    services = user["Servicios"]
+    
+    for i,service in enumerate(services):
+        
+        serviceToUpdate = reverseEngineering(service["Service name"],service["Password"],service["Creator"],userPassword)
+        if serviceToUpdate["Service name"]==serviceName:
+            
+            serviceToUpdate["Service name"]=newServiceName
+            serviceToUpdate["Password"]=newServicePass
+            
+            serviceUpdated= asignService(serviceToUpdate["Service name"],serviceToUpdate["Password"],serviceToUpdate["Creator"],userPassword)
+            
+            services[i]=serviceUpdated
+            
+            #actualizakson
+            user["Servicios"] = services
+
+            with open(fileName, "w") as file:
+                json.dump(jsonData, file)
+            print("Servicio modificado con éxito")
+            break
+    print("No se encontraron registros")
+
+    def getJson(fileName):
+    try:
+        with open(fileName, 'r') as file:
+            jsonData = json.load(file)
+        return jsonData
+    except:
+        print("El json no es válido")
+
+def getUserData(userName, jsonData):
+  
+    for user in jsonData:
+        if user["Username"]==userName:
+            return user
+    print("No se encontró usuario") 
+    return None
+
+def reverseEngineering(nameCoded, passwordCoded, createdByCoded, userPassword):
+    nameBytes = base64.b64decode(nameCoded)
+    passwordBytes = base64.b64decode(passwordCoded)
+    createdByBytes = base64.b64decode(createdByCoded)
+
+    name = decrypt(nameBytes, userPassword)
+    password = decrypt(passwordBytes, userPassword)
+    createdBy = decrypt(createdByBytes, userPassword)
+
+    service = {"Service name": name, "Password": password, "Creator": createdBy}
+
+    print(" ")
+    print("El servicio es: ")
+    print("   ")
+    return service
+
+def asignService(name,password,createdBy,userPassword):
+     ServiceName= encrypt(name,userPassword)
+     ServicePassword= encrypt(password,userPassword)
+     ServiceCreatedBy= encrypt(createdBy,userPassword)
+    
+     nameCoded = base64.b64encode(ServiceName).decode('utf-8')
+     passwordCoded = base64.b64encode(ServicePassword).decode('utf-8')
+     createdByCoded = base64.b64encode(ServiceCreatedBy).decode('utf-8')
+
+
+     service = {"Service name":nameCoded,"Password":passwordCoded,"Creator":createdByCoded}
+    
+     print(" ")
+     print("El servicio es: ")
+     print(service)
+     print("   ")
+     jsonData = json.dumps(service, ensure_ascii=False)
+          
+     return jsonData
+
+def ShowService(userName,userPassword,fileName):
+    jsonData = getJson(fileName)
+    user = getUserData(userName,jsonData)
+    services = user["Servicios"]  
+    for service in services:
+        
+        display = reverseEngineering(service["Service name"],service["Password"],service["Creator"],userPassword)
+
+        
+        print(display)  
+
+
+[{"Username": "Sergio", "Password": "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e", "Email": "", "Servicios": [{"Service name": "7HC6YiDgCJjbK39sMyhISGUv5pKIXUqnaKVqFgYnDtM=", "Password": "/OFSPQKYV3jJu2WO9r3gzT6qWcivd1ZTYsTLKkyW/i0=", "Creator": "v259mcncPa2c0U8L0UsWLuwl7J0qAqUgiBTQtT8zHX8="}]}]
+[{"Username": "Sergio", "Password": "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e", "Email": "", "Servicios": ["{\"Service name\": \"QH4uBU/1xK8Irtw6WfjhgzLQwi2Ur+vQjPnue/z/2F4=\", \"Password\": \"cWoYuDLUHCcITY91HydEfMWZ6hG4xTl1AjNEq2WVEHQ=\", \"Creator\": \"y24jDG4prV42gdL44XtPo9tKkfphOk2sYez/616qIfE=\"}"]}]
+
+
+[{"Username": "Sergio", "Password": "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e", "Email": "", "Servicios": [{"Service name": "9Zp/azAJ4zI1Lktea3+28JLkxixKs+3NyIuFNbApbh4=", "Password": "ftqEz3umnWZq/CYaSCmmCLja54m2TKeih4S+sVqaRGY=", "Creator": "vXWeH0pLVtdrosQIPOYhEomxMXo/wiQHY+XYMCT78TY="}]}]

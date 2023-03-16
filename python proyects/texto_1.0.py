@@ -125,7 +125,6 @@ def DeleteService(userName, serviceName,fileName, userPassword):
     for service in services:
         
         dropService = reverseEngineering(service["Service name"],service["Password"],service["Creator"],userPassword)
-        
         if dropService["Service name"]==serviceName:
             user["Servicios"].remove(service)
             with open(fileName, "w") as file:
@@ -136,26 +135,46 @@ def DeleteService(userName, serviceName,fileName, userPassword):
             
         
         
-def AlterService(userName, serviceName, newServiceData, fileName):
+def AlterService(userName, serviceName,fileName, userPassword,newServiceName,newServicePass):
     jsonData = getJson(fileName)
-    userData = getUserData(userName, jsonData)
-    for serviceData in userData["Servicios"]:
-        if serviceData["Service name"] == serviceName:
-            serviceData.update(newServiceData)
-            break
-    with open(fileName, "w") as file:
-        json.dump(jsonData, file)
-
-def ServiceUpdated(name,password):
-    serviceData={
-        "Service name": name,
-        "Password":password
-    }
-    return serviceData
-    
-    
-
+    user = getUserData(userName, jsonData)
+    services = user["Servicios"]
+    aux = 0
+    for service in services:
         
+        serviceToUpdate = reverseEngineering(service["Service name"],service["Password"],service["Creator"],userPassword)
+        if serviceToUpdate["Service name"]==serviceName:
+            
+            serviceToUpdate["Service name"]=newServiceName
+            serviceToUpdate["Password"]=newServicePass
+            
+            serviceUpdated= asignService(serviceToUpdate["Service name"],serviceToUpdate["Password"],serviceToUpdate["Creator"],userPassword)
+            print("")
+
+            print(f"Servicio antes de modificar{service}")
+            print("")
+
+            print(f" servicio por insertar {serviceUpdated}")
+            print("")
+            
+            print(f"servicio ingresado {service}")
+            print("")
+            user["Servicios"][aux] = serviceUpdated
+
+
+            
+            #actualizakson
+            user["Servicios"] = services
+
+            with open(fileName, "w") as file:
+                json.dump(jsonData, file)
+            print("Servicio modificado con éxito")
+            break
+        else:
+            aux += 1
+    print("No se encontraron registros")
+
+          
 #--------------------EXTRAS------Servicios-----------------------------------------------------------------------
 def asignService(name,password,createdBy,userPassword):
      ServiceName= encrypt(name,userPassword)
@@ -167,7 +186,9 @@ def asignService(name,password,createdBy,userPassword):
      createdByCoded = base64.b64encode(ServiceCreatedBy).decode('utf-8')
 
 
-     service = {"Service name":nameCoded,"Password":passwordCoded,"Creator":createdByCoded}
+     service = {"Service name":nameCoded,
+                "Password":passwordCoded,
+                "Creator":createdByCoded}
     
      print(" ")
      print("El servicio es: ")
@@ -344,12 +365,10 @@ def subMenu(userName,userPassword,fileName):
             
             elif y==4:
                 serviceName = input("Ingrese el nombre del servicio que desea editar: ")
-                newName= input("Ingresa el nuevo nombre del servicio: ")
-                newPass= input("Ingresa la nueva contraseña del servicio: ")
-
-                newServiceData = ServiceUpdated(newName,newPass)
+                newServiceName= input("Ingresa el nuevo nombre del servicio: ")
+                newServicePass= input("Ingresa la nueva contraseña del servicio: ")
             
-                AlterService(userName, serviceName, newServiceData, fileName)
+                AlterService(userName, serviceName,fileName, userPassword,newServiceName,newServicePass)
             elif y==5:
                 print("Cerrando...")
                 condition=False
