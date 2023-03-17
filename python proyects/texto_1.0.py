@@ -11,11 +11,14 @@ from Crypto.Util.Padding import unpad
 
 
 
-#---------------------------------USUARIOS---------------------------------------
+#-----------------------------------------USUARIOS---------------------------------------
 
+
+#Función de añadir usuario, toma como parametro un archivo, es dónde se crea el usuario
 def AddUser(fileName):
     condition = True
     while condition:
+        #validamos que el archivo exista, si no lo creamos
         if not fileExists(fileName):
                 name = input("Ingrese el nombre de usuario: ")
                 if(name==""):
@@ -67,14 +70,14 @@ def FuncSha512(password):
     hashSha512= hashlib.sha512(password.encode('utf-8'))
     sha512 = hashSha512.hexdigest()
     return sha512
-#---------------------------------TERMINA-USUARIOS--------------------------------------
+#-----------------------------------TERMINA-USUARIOS--------------------------------------
 
     
     
 
 
 
-#---------------------------------SERVICIOS---------------------------------------
+#--------------------------------------SERVICIOS------------------------------------------
 
 #ADICIÓN DE SERVICIO
 
@@ -139,8 +142,7 @@ def AlterService(userName, serviceName,fileName, userPassword,newServiceName,new
     jsonData = getJson(fileName)
     user = getUserData(userName, jsonData)
     services = user["Servicios"]
-    aux = 0
-    for service in services:
+    for i,service in enumerate(services):
         
         serviceToUpdate = reverseEngineering(service["Service name"],service["Password"],service["Creator"],userPassword)
         if serviceToUpdate["Service name"]==serviceName:
@@ -149,33 +151,17 @@ def AlterService(userName, serviceName,fileName, userPassword,newServiceName,new
             serviceToUpdate["Password"]=newServicePass
             
             serviceUpdated= asignService(serviceToUpdate["Service name"],serviceToUpdate["Password"],serviceToUpdate["Creator"],userPassword)
-            print("")
-
-            print(f"Servicio antes de modificar{service}")
-            print("")
-
-            print(f" servicio por insertar {serviceUpdated}")
-            print("")
             
-            print(f"servicio ingresado {service}")
-            print("")
-            user["Servicios"][aux] = serviceUpdated
-
-
-            
-            #actualizakson
-            user["Servicios"] = services
+            services[i] = json.loads(serviceUpdated)
 
             with open(fileName, "w") as file:
                 json.dump(jsonData, file)
-            print("Servicio modificado con éxito")
-            break
-        else:
-            aux += 1
-    print("No se encontraron registros")
+            return True
+            
+    return False
 
           
-#--------------------EXTRAS------Servicios-----------------------------------------------------------------------
+#---------------------------EXTRAS----SERVICIOS-------------------------------------------
 def asignService(name,password,createdBy,userPassword):
      ServiceName= encrypt(name,userPassword)
      ServicePassword= encrypt(password,userPassword)
@@ -189,11 +175,6 @@ def asignService(name,password,createdBy,userPassword):
      service = {"Service name":nameCoded,
                 "Password":passwordCoded,
                 "Creator":createdByCoded}
-    
-     print(" ")
-     print("El servicio es: ")
-     print(service)
-     print("   ")
      jsonData = json.dumps(service, ensure_ascii=False)
           
      return jsonData
@@ -211,9 +192,7 @@ def reverseEngineering(nameCoded, passwordCoded, createdByCoded, userPassword):
 
     service = {"Service name": name, "Password": password, "Creator": createdBy}
 
-    print(" ")
-    print("El servicio es: ")
-    print("   ")
+   
     return service
 
     
@@ -231,18 +210,18 @@ def getUserData(userName, jsonData):
     return None
         
         
-def getServiceData(serviceName):
-    for user in jsonData:
-        if user["Username"]==userName:
-            services = user["Servicios"]
-            for service in services:
-                if service["Service name"]==serviceName:
-                    return service
-            print("No se encontró el servicio")
-            return None    
+# def getServiceData(serviceName):
+#     for user in jsonData:
+#         if user["Username"]==userName:
+#             services = user["Servicios"]
+#             for service in services:
+#                 if service["Service name"]==serviceName:
+#                     return service
+#             print("No se encontró el servicio")
+#             return None    
         
         
-#---------------------EXTRAS--USUARIOS----------------------#
+#-------------------------------------EXTRAS--USUARIOS-----------------------------------#
 
 def existMail(mail, jsonData):
     if len(jsonData)==0:
@@ -254,7 +233,7 @@ def existMail(mail, jsonData):
     return True
         
             
-#---------------------SOLO--EXTRAS------------#
+#-----------------------------------SOLO--EXTRAS------------------------------------------#
 def getJson(fileName):
     try:
         with open(fileName, 'r') as file:
@@ -303,10 +282,10 @@ def getKeyBytes(keyString):
     
     
     
-#------------------------------------TERMINA EXTRAS----------------------------------------------------------------------
+#------------------------------------TERMINA--EXTRAS------------------------------------------#
 
 
-#-------MENUS---#
+#------------------------------------------MENUS------------------------------------------#
     
     
 def Menu (fileName):
@@ -368,7 +347,14 @@ def subMenu(userName,userPassword,fileName):
                 newServiceName= input("Ingresa el nuevo nombre del servicio: ")
                 newServicePass= input("Ingresa la nueva contraseña del servicio: ")
             
-                AlterService(userName, serviceName,fileName, userPassword,newServiceName,newServicePass)
+                banner = AlterService(userName, serviceName,fileName, userPassword,newServiceName,newServicePass)
+                
+                if(banner):
+                    print("Registro modificado con éxito")
+                else:
+                    print("Registro no encontrado")
+                
+                
             elif y==5:
                 print("Cerrando...")
                 condition=False
@@ -385,7 +371,7 @@ def subMenu(userName,userPassword,fileName):
     
     
     
-#---------------------------EJECUCIÓN-DE-CÓDIGO---------------------------    
+#------------------------------------EJECUCIÓN-DE-CÓDIGO-------------------------------------#   
 
 
 fileName= "nuevo.txt"
