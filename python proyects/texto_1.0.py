@@ -91,7 +91,6 @@ def AddService(userName, userPassword, fileName):
 
     condition = True
     while condition:
-        print(userName)
         user = getUserData(userName, jsonData)
         name = input("Ingresa el nombre del servicio: ")
         if name == "":
@@ -141,7 +140,8 @@ def DeleteService(userName, serviceName,fileName, userPassword):
             print("Servicio eliminado con éxito")
             backUp(fileName)
             break
-    print("No se encontraron registros")
+        
+    else: print("No se encontraron registros")
             
         
         
@@ -297,7 +297,7 @@ def backUp(fileName):
         shutil.copy2(fileName, backupFileName)
         print(f"Copia de seguridad creada como {backupFileName}")
     except:
-        print("No se pudo")
+        print("No se pudo hacer backup")
 
 def restoreBackUp(fileName):
     try:
