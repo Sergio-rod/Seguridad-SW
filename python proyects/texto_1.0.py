@@ -32,6 +32,7 @@ def AddUser(fileName):
                      with open(fileName, 'w') as file:
                         json.dump([user],file)
                         print("Se ha creado el archivo")
+                     backUp(fileName)
                 except:
                     print("No fue posible crear el archivo")
         else:   
@@ -54,6 +55,7 @@ def AddUser(fileName):
                          with open(fileName, 'w') as file:
                             json.dump(jsonData, file)
                             print("Se creo el usuario correctamente")
+                            backUp(fileName)
                     except:
                         print("No fue posible crear el usuario")
                 else: print("El email ya existe, intentalo de nuevo") 
@@ -107,6 +109,7 @@ def AddService(userName, userPassword, fileName):
             with open(fileName, "w") as file:
                 json.dump(jsonData, file, ensure_ascii=False)
             print("Se ha agregado el servicio con éxito")
+            backUp(fileName)
         except Exception as e:
             traceback.print_exc()
             print("Ocurrió un error", e)
@@ -136,6 +139,7 @@ def DeleteService(userName, serviceName,fileName, userPassword):
             with open(fileName, "w") as file:
                 json.dump(jsonData, file)
             print("Servicio eliminado con éxito")
+            backUp(fileName)
             break
     print("No se encontraron registros")
             
@@ -159,6 +163,7 @@ def AlterService(userName, serviceName,fileName, userPassword,newServiceName,new
 
             with open(fileName, "w") as file:
                 json.dump(jsonData, file)
+            backUp(fileName)
             return True
             
     return False
@@ -245,7 +250,7 @@ def getJson(fileName):
     except:
         print("El json está corrupto")
         print("Se eliminará el archivo")
-        os.remove(fileName)
+        restoreBackUp(fileName)
         
 
 def fileExists(fileName):
