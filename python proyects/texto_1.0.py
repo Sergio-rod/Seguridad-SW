@@ -8,6 +8,7 @@ import traceback
 import base64
 from Crypto.Util import Padding
 from Crypto.Util.Padding import unpad
+import shutil
 
 
 
@@ -34,7 +35,9 @@ def AddUser(fileName):
                 except:
                     print("No fue posible crear el archivo")
         else:   
+            
                 jsonData = getJson(fileName)
+                
                 printJson(jsonData)
                 name = input("Ingrese el nombre de usuario: ")
                 if(name==""):
@@ -240,7 +243,10 @@ def getJson(fileName):
             jsonData = json.load(file)
         return jsonData
     except:
-        print("El json no es válido")
+        print("El json está corrupto")
+        print("Se eliminará el archivo")
+        os.remove(fileName)
+        
 
 def fileExists(fileName):
     try:
@@ -279,6 +285,27 @@ def getKeyBytes(keyString):
     keyBytes = keyString.encode('utf-8')
     keyBytes += b'\0' * (AES.block_size - len(keyBytes) % AES.block_size)
     return keyBytes
+
+def backUp(fileName):
+    try:
+        backupFileName = fileName + ".bak"
+        shutil.copy2(fileName, backupFileName)
+        print(f"Copia de seguridad creada como {backupFileName}")
+    except:
+        print("No se pudo")
+
+def restoreBackUp(fileName):
+    try:
+        backUpFileName = fileName + ".bak"
+        if os.path.isfile(backUpFileName):
+            os.replace(backUpFileName, fileName)
+            print(f"Archivo restaurado a partir de la copia de seguridad {backUpFileName}")
+    except:
+        print("No se pudo restaurar la copia")
+    
+    
+    
+    
     
     
     
@@ -362,9 +389,10 @@ def subMenu(userName,userPassword,fileName):
             
             else: print("Ingresa una opción valida")
             
-        except Exception as e:
-            traceback.print_exc()
-            print("Debes ingresar un número válido 1, 2, 3, 4, o 5", e)
+        #except Exception as e:
+        except:
+           # traceback.print_exc()
+            print("Debes ingresar un número válido 1, 2, 3, 4, o 5")
             
         
 
